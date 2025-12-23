@@ -5,17 +5,16 @@ import os
 import string
 import nltk
 from nltk.corpus import stopwords
+import sys # Necesario para el truco
 
 app = Flask(__name__)
 
-# Configuración de CORS
+# Configuración CORS
 CORS(app, resources={r"/*": {"origins": ["https://cdev76.vercel.app", "http://localhost:4321"]}})
 
-# --- 1. CONFIGURACIÓN DE NLTK (¡ESTO ES LO QUE FALTABA!) ---
-# Decimos a NLTK que busque datos en la carpeta temporal del sistema
+# --- 1. CONFIGURACIÓN NLTK ---
 nltk.data.path.append("/tmp")
 
-# Función para asegurar que los stopwords existen
 def download_nltk_data():
     try:
         stopwords.words('english')
@@ -23,25 +22,21 @@ def download_nltk_data():
         print("Descargando stopwords a /tmp...")
         nltk.download('stopwords', download_dir='/tmp')
 
-# Ejecutamos la descarga al iniciar la app
 download_nltk_data()
 
 # --- 2. LA FUNCIÓN TEXT_PROCESS ---
-# Esta función DEBE estar definida antes de cargar el modelo porque pickle la necesita
 def text_process(mess):
     """
-    1. Quita puntuación
-    2. Quita stopwords
-    3. Devuelve lista de palabras limpias
+    Función de limpieza de texto.
     """
-    # Check characters to see if they are in punctuation
     nopunc = [char for char in mess if char not in string.punctuation]
-
-    # Join the characters again to form the string.
     nopunc = ''.join(nopunc)
-    
-    # Now just remove any stopwords
     return [word for word in nopunc.split() if word.lower() not in stopwords.words('english')]
+
+# 🔥 EL TRUCO MÁGICO PARA VERCEL 🔥
+# Inyectamos la función en el __main__ para que pickle la encuentre
+import __main__
+__main__.text_process = text_process
 
 
 # --- 3. CARGA DE MODELOS ---
@@ -64,7 +59,6 @@ except Exception as e:
 
 @app.route('/', methods=['GET'])
 def home():
-    """Ruta para verificar que la API está viva"""
     return jsonify({
         "status": "online",
         "message": "API de detección de Spam funcionando. Envía POST a /predict"
@@ -72,15 +66,12 @@ def home():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    # 1. Verificación de seguridad
     if not model or not vectorizer:
         return jsonify({"error": "El modelo no está cargado en el servidor."}), 500
 
     try:
-        # 2. Obtener datos
         data = request.get_json(force=True)
         
-        # Unimos asunto + mensaje para tener más contexto
         subject = data.get('subject', '')
         message = data.get('message', '')
         full_text = f"{subject} {message}".strip()
@@ -88,19 +79,14 @@ def predict():
         if not full_text:
              return jsonify({"error": "Texto vacío"}), 400
 
-        # 3. Vectorizar (Transformar texto a números)
-        # Importante: pasamos el texto dentro de una lista []
+        # Vectorizar
         vec_text = vectorizer.transform([full_text])
-
-        # 4. Predecir
-        prediction = model.predict(vec_text)[0] # 'spam' o 'ham'
         
-        # Calcular confianza (Probabilidad)
-        # predict_proba devuelve [[prob_ham, prob_spam]]
+        # Predecir
+        prediction = model.predict(vec_text)[0]
         proba_list = model.predict_proba(vec_text)[0]
-        confidence = proba_list.max() # Tomamos la más alta
+        confidence = proba_list.max()
 
-        # 5. Respuesta JSON
         return jsonify({
             "is_spam": bool(prediction == 'spam'),
             "label": prediction,
@@ -109,5 +95,5 @@ def predict():
         })
 
     except Exception as e:
-        print(f"ERROR: {e}") # Esto saldrá en los logs de Vercel
+        print(f"ERROR: {e}")
         return jsonify({"error": str(e)}), 500
