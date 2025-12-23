@@ -33,7 +33,6 @@ def text_process(mess):
     nopunc = ''.join(nopunc)
     return [word for word in nopunc.split() if word.lower() not in stopwords.words('english')]
 
-# 🔥 EL TRUCO MÁGICO PARA VERCEL 🔥
 # Inyectamos la función en el __main__ para que pickle la encuentre
 import __main__
 __main__.text_process = text_process
