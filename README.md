@@ -18,7 +18,7 @@ Si quieres ejecutar la API en tu ordenador:
 
 1.  **Clona el repositorio:**
     ```bash
-    git clone [https://github.com/CnAs076/spam-detection-api.git](https://github.com/CnAs076/spam-detection-api.git)
+    git clone https://github.com/CnAs076/spam-detection-api.git
     cd spam-detection-api
     ```
 
