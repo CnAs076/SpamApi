@@ -97,7 +97,7 @@ def predict():
 
 # IMPORTANTE: Vercel busca la variable 'app', no ejecuta 'app.run()'
 
-# AÑADE ESTO AL FINAL DEL ARCHIVO:
-if __name__ == '__main__':
+# Debug on localhost
+#if __name__ == '__main__':
     # debug=True hace que el servidor se reinicie si guardas cambios en el código
-    app.run(debug=True, port=5000)
+#   app.run(debug=True, port=5000)
