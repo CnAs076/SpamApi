@@ -10,7 +10,7 @@ import sys # Necesario para el truco
 app = Flask(__name__)
 
 # Configuración CORS
-CORS(app, resources={r"/*": {"origins": ["https://cdev76.vercel.app", "http://localhost:4321"]}})
+CORS(app, resources={r"/*": {"origins": ["https://cdev76.vercel.app","https://cdev76.com", "http://localhost:4321"]}})
 
 # --- 1. CONFIGURACIÓN NLTK ---
 nltk.data.path.append("/tmp")
